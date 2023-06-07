@@ -8,32 +8,32 @@ import {
   StyleSheet,
   TouchableOpacity,
 } from "react-native";
-import { Device } from "react-native-ble-plx";
+import { HermesDevice } from "./HermesDevice";
 
 type DeviceModalListItemProps = {
-  item: ListRenderItemInfo<Device>;
-  connectToPeripheral: (device: Device) => void;
+  item: ListRenderItemInfo<HermesDevice>;
+  selectDevice: (device: HermesDevice) => void;
   closeModal: () => void;
 };
 
 type DeviceModalProps = {
-  devices: Device[];
+  devices: HermesDevice[];
   visible: boolean;
-  connectToPeripheral: (device: Device) => void;
+  selectDevice: (device: HermesDevice) => void;
   closeModal: () => void;
 };
 
 const DeviceModalListItem: FC<DeviceModalListItemProps> = (props) => {
-  const { item, connectToPeripheral, closeModal } = props;
+  const { item, selectDevice, closeModal } = props;
 
-  const connectAndCloseModal = useCallback(() => {
-    connectToPeripheral(item.item);
+  const selectAndCloseModal = useCallback(() => {
+    selectDevice(item.item);
     closeModal();
-  }, [closeModal, connectToPeripheral, item.item]);
+  }, [closeModal, selectDevice, item.item]);
 
   return (
     <TouchableOpacity
-      onPress={connectAndCloseModal}
+      onPress={selectAndCloseModal}
       style={modalStyle.ctaButton}
     >
       <Text style={modalStyle.ctaButtonText}>{item.item.name}</Text>
@@ -41,20 +41,20 @@ const DeviceModalListItem: FC<DeviceModalListItemProps> = (props) => {
   );
 };
 
-const DeviceModal: FC<DeviceModalProps> = (props) => {
-  const { devices, visible, connectToPeripheral, closeModal } = props;
+const DeviceSelectionModal: FC<DeviceModalProps> = (props) => {
+  const { devices, visible, selectDevice, closeModal } = props;
 
   const renderDeviceModalListItem = useCallback(
-    (item: ListRenderItemInfo<Device>) => {
+    (item: ListRenderItemInfo<HermesDevice>) => {
       return (
         <DeviceModalListItem
           item={item}
-          connectToPeripheral={connectToPeripheral}
+          selectDevice={selectDevice}
           closeModal={closeModal}
         />
       );
     },
-    [closeModal, connectToPeripheral]
+    [closeModal, selectDevice]
   );
 
   return (
@@ -129,4 +129,4 @@ const modalStyle = StyleSheet.create({
   },
 });
 
-export default DeviceModal;
+export default DeviceSelectionModal;

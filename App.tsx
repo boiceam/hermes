@@ -6,17 +6,23 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import DeviceModal from "./DeviceConnectionModal";
+import WowzerView from "./WowzerView";
+import DeviceSelectionModal from "./DeviceSelectionModal";
 import useBLE from "./useBLE";
+import { HermesDevice } from "./HermesDevice";
+import { Wowzer, WowzerStatus } from "./Wowzer";
 
 const App = () => {
   const {
     requestPermissions,
-    scanForPeripherals,
-    connectToDevice,
-    disconnectFromDevice,
+    selectDevice,
+    startBleScan,
+    stopBleScan,
+    clearScanHistory,
+    deselectDevice,
     allDevices,
-    connectedDevice,
+    selectedDevice,
+    deviceStatus,
   } = useBLE();
 
   const [isModalVisible, setIsModalVisible] = useState<boolean>(false);
@@ -24,7 +30,7 @@ const App = () => {
   const scanForDevices = async () => {
     const isPermissionsEnabled = await requestPermissions();
     if (isPermissionsEnabled) {
-      scanForPeripherals();
+      startBleScan();
     }
   };
 
@@ -37,35 +43,55 @@ const App = () => {
     setIsModalVisible(true);
   };
 
-  return (
-    <SafeAreaView style={styles.container}>
-      <View style={styles.deviceDataTitleWrapper}>
-        {connectedDevice ? (
-          <>
-            <Text style={styles.deviceDataTitleText}>Placeholder</Text>
-          </>
-        ) : (
-          <Text style={styles.deviceDataTitleText}>
-            Please Connect to a Device
+  const selectDeviceAndClose = (device: HermesDevice) => {
+    selectDevice(device);
+    setIsModalVisible(false);
+    stopBleScan();
+  };
+
+  const cancelScanAndClose = () => {
+    setIsModalVisible(false);
+    stopBleScan();
+    clearScanHistory();
+  };
+
+  if (!selectedDevice) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <View style={styles.deviceDataTitleWrapper}>
+          {selectedDevice ? (
+            <>
+              <Text style={styles.deviceDataTitleText}>Placeholder</Text>
+            </>
+          ) : (
+            <Text style={styles.deviceDataTitleText}>
+              Please Select a Device
+            </Text>
+          )}
+        </View>
+        <TouchableOpacity
+          onPress={openModal}
+          style={styles.ctaButton}
+        >
+          <Text style={styles.ctaButtonText}>
+            Select Device
           </Text>
-        )}
-      </View>
-      <TouchableOpacity
-        onPress={connectedDevice ? disconnectFromDevice : openModal}
-        style={styles.ctaButton}
-      >
-        <Text style={styles.ctaButtonText}>
-          {connectedDevice ? "Disconnect" : "Connect"}
-        </Text>
-      </TouchableOpacity>
-      <DeviceModal
-        closeModal={hideModal}
-        visible={isModalVisible}
-        connectToPeripheral={connectToDevice}
-        devices={allDevices}
-      />
-    </SafeAreaView>
-  );
+        </TouchableOpacity>
+        <DeviceSelectionModal
+          closeModal={cancelScanAndClose}
+          visible={isModalVisible}
+          selectDevice={selectDeviceAndClose}
+          devices={allDevices}
+        />
+      </SafeAreaView>
+    );
+  } else {
+    return <WowzerView
+      selectedDevice={selectedDevice as Wowzer}
+      deviceStatus={deviceStatus as WowzerStatus}
+      deselectDevice={deselectDevice}
+    />
+  }
 };
 
 const styles = StyleSheet.create({
